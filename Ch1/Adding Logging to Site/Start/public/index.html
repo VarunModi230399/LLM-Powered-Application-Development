@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Clone</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; }
+        #chat-container { width: 80%; max-width: 800px; height: 80vh; display: flex; flex-direction: column; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; }
+        #chat-messages { flex-grow: 1; overflow-y: auto; padding: 20px; background-color: white; }
+        #user-input { display: flex; padding: 10px; background-color: #f0f0f0; }
+        #message-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 3px; }
+        #send-button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 3px; margin-left: 10px; cursor: pointer; }
+        #thinking { display: none; padding: 10px; background-color: #e0e0e0; text-align: center; font-style: italic; }
+    </style>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:i0f84bba906045b4af568ee102a52dcb msdt:dt="string">0.1 Initial category|0239cc7a-0c96-48a8-9e0e-a383e362571c</mso:i0f84bba906045b4af568ee102a52dcb>
+<mso:TaxCatchAll msdt:dt="string">1;#0.1 Initial category|0239cc7a-0c96-48a8-9e0e-a383e362571c</mso:TaxCatchAll>
+<mso:RevIMComments msdt:dt="string"></mso:RevIMComments>
+<mso:RevIMExtends msdt:dt="string">{&quot;Locked&quot;:null,&quot;LockedBy&quot;:null,&quot;UnLocked&quot;:null,&quot;UnLockedBy&quot;:null,&quot;Classified&quot;:&quot;2025-08-22T07:48:50.300Z&quot;,&quot;KSUClass&quot;:&quot;0239cc7a-0c96-48a8-9e0e-a383e362571c&quot;,&quot;Reclassified&quot;:null,&quot;ReclassifiedBy&quot;:null,&quot;EDReclassified&quot;:null,&quot;EDReclassifiedBy&quot;:null,&quot;EventCreated&quot;:null,&quot;EventModified&quot;:null,&quot;EventDeleted&quot;:null,&quot;EventCreatedBy&quot;:null,&quot;EventModifiedBy&quot;:null,&quot;EventDeletedBy&quot;:null,&quot;Moved&quot;:null,&quot;MovedBy&quot;:null,&quot;MovedFrom&quot;:null}</mso:RevIMExtends>
+<mso:MediaServiceImageTags msdt:dt="string"></mso:MediaServiceImageTags>
+<mso:LegalHoldTag msdt:dt="string"></mso:LegalHoldTag>
+<mso:RevIMDeletionDate msdt:dt="string">2027-08-22T09:48:09Z</mso:RevIMDeletionDate>
+<mso:lcf76f155ced4ddcb4097134ff3c332f msdt:dt="string"></mso:lcf76f155ced4ddcb4097134ff3c332f>
+<mso:acb21a150d6a48c58e53ca87057b6966 msdt:dt="string"></mso:acb21a150d6a48c58e53ca87057b6966>
+<mso:RevIMBCS msdt:dt="string">1;#0.1 Initial category|0239cc7a-0c96-48a8-9e0e-a383e362571c</mso:RevIMBCS>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <div id="thinking">Thinking...</div>
+        <div id="user-input">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const thinkingIndicator = document.getElementById('thinking');
+
+        function addMessage(message, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            messageElement.style.marginBottom = '10px';
+            messageElement.style.padding = '10px';
+            messageElement.style.borderRadius = '5px';
+            messageElement.style.maxWidth = '70%';
+            messageElement.style.alignSelf = isUser ? 'flex-end' : 'flex-start';
+            messageElement.style.backgroundColor = isUser ? '#4CAF50' : '#f1f0f0';
+            messageElement.style.color = isUser ? 'white' : 'black';
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                socket.emit('chat message', message);
+                messageInput.value = '';
+                sendButton.disabled = true;
+            }
+        });
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+
+        socket.on('chat response', (response) => {
+            addMessage(response);
+            sendButton.disabled = false;
+        });
+
+        socket.on('thinking', (isThinking) => {
+            thinkingIndicator.style.display = isThinking ? 'block' : 'none';
+            sendButton.disabled = isThinking;
+            if (isThinking) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
